@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 // prettier-ignore
-import { Form, Button, Dialog, Input, Select, Notification } from 'element-react'
+import { Form, Button, Dialog, Input, Notification } from 'element-react'
 import { API, graphqlOperation } from "aws-amplify";
 import { createMarket } from "../graphql/mutations";
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
 
 import { UserContext } from "../App";
 
@@ -10,10 +12,18 @@ const NewMarket = () => {
   const [marketD, marketDHandler] = useState(false);
   const [formData, formDataHandler] = useState({
     name: "",
-    tags: ["Arts", "Tech", "Music", "Food"],
+    tags: [
+      { value: "Arts", label: "Arts" },
+      { value: "Tech", label: "Tech" },
+      { value: "Music", label: "Music" },
+      { value: "Food", label: "Food" },
+    ],
     selectedTags: [],
     options: [],
   });
+
+  const animatedComponents = makeAnimated();
+  const { tags, selectedTags } = formData;
 
   const handleAddMarket = async (user) => {
     try {
@@ -28,9 +38,9 @@ const NewMarket = () => {
       );
 
       console.info(`created market ${response.data.createMarket.id}`);
-      formDataHandler({ name: "", selectedTags: [] });
+      formDataHandler({ ...formData, name: "", selectedTags: [] });
     } catch (error) {
-      formDataHandler({ name: "" });
+      formDataHandler({...formData, name: "" });
       console.error(error, "error adding new market");
       Notification.error({
         title: "Error",
@@ -40,74 +50,73 @@ const NewMarket = () => {
   };
 
   const handleFilteredTags = (query) => {
-    const options = formData.tags
-      .map((tag) => ({ value: tag, label: tag }))
-      .filter((tag) => tag.label.toLowerCase().includes(query.toLowerCase()));
+    const options = formData.tags.filter((tag) =>
+      tag.label.toLowerCase().includes(query.toLowerCase())
+    );
 
-    formDataHandler({ options });
+    formDataHandler({ ...formData, options });
   };
+
+  const handleTags = (tags) => {
+
+    formDataHandler({
+      ...formData,
+      selectedTags: tags
+    })
+
+  }
+
+ 
   return (
     <UserContext.Consumer>
       {({ user }) => (
         <>
           <div>
-            <div className='market-header'>
-              <h1 className='market-title'>
+            <div className="market-header">
+              <h1 className="market-title">
                 Create Your Market Place
                 <Button
-                  type='text'
-                  icon='edit'
-                  className='market-title-button'
+                  type="text"
+                  icon="edit"
+                  className="market-title-button"
                   onClick={() => marketDHandler(true)}
                 />
               </h1>
             </div>
             <Dialog
-              title='Create New Market'
+              title="Create New Market"
               visible={marketD}
               onCancel={() => marketDHandler(false)}
-              size='large'
-              customClass='dialog'
+              size="large"
+              customClass="dialog"
             >
               <Dialog.Body>
-                <Form labelPosition='top'>
-                  <Form.Item label='Add Market Name'>
+                <Form labelPosition="top">
+                  <Form.Item label="Add Market Name">
                     <Input
-                      placeholder='Market Name'
+                      placeholder="Market Name"
                       trim={true}
-                      onChange={(name) => formDataHandler({ name })}
+                      onChange={(name) => formDataHandler({...formData, name })}
                       value={formData.name}
                     />
                   </Form.Item>
-                  <Form.Item label='Add Tags'>
+                  <Form.Item label="Add Tags">
                     <Select
-                      multiple={true}
-                      filterable={true}
-                      placeholder='Market Tags'
-                      onChange={(selectedTags) =>
-                        formDataHandler({
-                          selectedTags
-                        })
-                      }
-                    >
-                    
-                      {formData.options && formData.options.map((option) => {
-                        return (
-                          <Select.Option
-                            key={option.value}
-                            label={option.label}
-                            value={option.value}
-                          />
-                        );
-                      })}{" "}
-                    </Select>
+                      isMulti
+                      components={animatedComponents}
+                      placeholder="Market Tags"
+                      options={tags}
+                      value={selectedTags}
+                      onChange={handleTags}
+                      
+                    />
                   </Form.Item>
                 </Form>
               </Dialog.Body>
               <Dialog.Footer>
                 <Button onClick={() => marketDHandler(false)}>Cancel</Button>
                 <Button
-                  type='primary'
+                  type="primary"
                   disabled={!formData.name}
                   onClick={() => handleAddMarket(user)}
                   remoteMethod={handleFilteredTags}
