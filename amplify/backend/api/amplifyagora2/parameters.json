@@ -1,0 +1,11 @@
+{
+  "AppSyncApiName": "amplifyagora2",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authamplifyagora2754a1c04",
+      "Outputs.UserPoolId"
+    ]
+  }
+}
